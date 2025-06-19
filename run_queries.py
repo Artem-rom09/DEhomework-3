@@ -7,15 +7,14 @@ MONGO_CONFIG = {
     'host': 'localhost',
     'port': 27017,
     'db_name': 'ad_engagement_db',
-    'username': 'root', # Додано для аутентифікації
-    'password': 'example' # Додано для аутентифікації
+    'username': 'root',
+    'password': 'example' 
 }
 MONGO_COLLECTION_NAME = 'user_interactions'
 
 def connect_mongo():
     """Встановлює з'єднання з MongoDB."""
     try:
-        # Створення URI для підключення з аутентифікацією
         uri = f"mongodb://{MONGO_CONFIG['username']}:{MONGO_CONFIG['password']}@{MONGO_CONFIG['host']}:{MONGO_CONFIG['port']}/"
         client = pymongo.MongoClient(uri)
         client.admin.command('ping')
@@ -32,20 +31,19 @@ def connect_mongo():
 def pretty_print_json(data):
     """Виводить JSON у читабельному форматі."""
     if isinstance(data, list):
-        # Якщо список порожній, повідомити про це
         if not data:
             print("Даних не знайдено (порожній список).")
             return
         for item in data:
             print(json.dumps(item, indent=2, default=str))
     elif data:
-         print(json.dumps(data, indent=2, default=str))
+        print(json.dumps(data, indent=2, default=str))
     else:
         print("Даних не знайдено (None).")
 
 # --- ЗАВДАННЯ ---
 
-def task_1_get_user_interaction_history(collection, user_id=101):
+def task_1_get_user_interaction_history(collection, user_id=713):
     """1. Отримати всю історію взаємодій для конкретного користувача."""
     print(f"\n--- Завдання 1: Історія взаємодій для UserID: {user_id} ---\n")
     try:
@@ -56,7 +54,7 @@ def task_1_get_user_interaction_history(collection, user_id=101):
         print(f"Помилка: {e}")
         return None
 
-def task_2_get_last_5_sessions(collection, user_id=101):
+def task_2_get_last_5_sessions(collection, user_id=713): 
     """2. Отримати останні 5 рекламних сесій користувача."""
     print(f"\n--- Завдання 2: Останні 5 сесій для UserID: {user_id} ---\n")
     pipeline = [
@@ -67,6 +65,11 @@ def task_2_get_last_5_sessions(collection, user_id=101):
         {'$group': {
             '_id': '$_id',
             'last_5_sessions': {'$push': '$sessions'}
+        }},
+        {'$project': { 
+            '_id': 0,
+            'user_id': '$_id',
+            'last_5_sessions': '$last_5_sessions'
         }}
     ]
     try:
@@ -77,17 +80,18 @@ def task_2_get_last_5_sessions(collection, user_id=101):
         print(f"Помилка: {e}")
         return None
 
-def task_3_time_windowed_performance(collection, advertiser_id=1):
+def task_3_time_windowed_performance(collection, advertiser_id=41): 
     """3. Кількість кліків за годину для кампаній вказаного рекламодавця за останні 24 години."""
     print(f"\n--- Завдання 3: Кліки за годину для AdvertiserID: {advertiser_id} (останні 24 години) ---\n")
-    last_24_hours = datetime.now() - timedelta(hours=24)
+
+    last_two_years = datetime.now() - timedelta(days=365*2) 
     pipeline = [
         {'$unwind': '$sessions'},
         {'$unwind': '$sessions.impressions'},
         {'$match': {
             'sessions.impressions.clicked': True,
             'sessions.impressions.campaign_details.advertiser_id': advertiser_id,
-            'sessions.impressions.click_details.click_timestamp': {'$gte': last_24_hours}
+            'sessions.impressions.click_details.click_timestamp': {'$gte': last_two_years} 
         }},
         {'$group': {
             '_id': {
@@ -145,7 +149,7 @@ def task_4_detect_ad_fatigue(collection, min_impressions=5):
         print(f"Помилка: {e}")
         return None
 
-def task_5_real_time_targeting_lookup(collection, user_id=101):
+def task_5_real_time_targeting_lookup(collection, user_id=713):
     """5. Отримати топ-3 найбільш залучених категорій реклами для користувача."""
     print(f"\n--- Завдання 5: Топ-3 категорій для UserID: {user_id} ---\n")
     pipeline = [
@@ -178,11 +182,11 @@ def main():
     collection = connect_mongo()
     if collection is not None:
         # Виконання всіх завдань
-        task_1_get_user_interaction_history(collection, user_id=101)
-        task_2_get_last_5_sessions(collection, user_id=101)
-        task_3_time_windowed_performance(collection, advertiser_id=1)
-        task_4_detect_ad_fatigue(collection)
-        task_5_real_time_targeting_lookup(collection, user_id=101)
+        task_1_get_user_interaction_history(collection, user_id=713)
+        task_2_get_last_5_sessions(collection, user_id=713)
+        task_3_time_windowed_performance(collection, advertiser_id=41) 
+        task_4_detect_ad_fatigue(collection) 
+        task_5_real_time_targeting_lookup(collection, user_id=713)
 
 if __name__ == '__main__':
     main()

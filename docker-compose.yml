@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   mongodb:
     image: mongo:latest
@@ -11,6 +12,21 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
 
+  app:
+    build: .
+    container_name: python_data_app
+    depends_on:
+      - mongodb
+    environment:
+      - DB_HOST=ваш_mysql_хост
+      - DB_DATABASE=my_ad_data
+      - DB_USER=me
+      - DB_PASSWORD=artem228
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB_NAME=ad_engagement_db
+      - MONGO_USER=root
+      - MONGO_PASSWORD=example
+
 volumes:
   mongo-data:
-
